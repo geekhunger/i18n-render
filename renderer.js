@@ -1,15 +1,13 @@
-import Type from "type-approve"
-import {translate} from "../lang/translator.js"
-import {eld} from "eld"
+import {assert, type} from "type-approve"
+import {translate} from "./translator.js"
+import {detect as LanguageParser} from "eld"
 import {stringify as yamlify} from "yaml"
-
-const {assert, type} = Type
 
 const prettify = function(value) {
     return util.inspect(
-        type({json: obj}) // value
-            ? JSON.parse(obj)
-            : obj,
+        type({json: value}) // value
+            ? JSON.parse(value)
+            : value,
         { // options
             compact: false, // use linebreak and indentation
             showHidden: false,
@@ -19,7 +17,7 @@ const prettify = function(value) {
     )
 }
 
-export default function addResponseMethod(req, res, nxt) {
+const addResponseMethod = function(decorator, req, res, nxt) {
     /*
         Add a new response decorator `res.return` for rendering responses.
         The renderer can respond automatically with HTML or JSON, depending on the 'Accept' header negotiation sent by the client.
@@ -35,7 +33,7 @@ export default function addResponseMethod(req, res, nxt) {
             res.return()
     */
 
-    assert(type({nil: res.return}), "Response decorator with name 'return' is reserved!")
+    assert(type({nil: res.return}), `Response decorator with name '${decorator}' is already reserved!`)
 
     let hyperlink = req.protocol + "://" + req.headers.host + req.originalUrl // https://stackoverflow.com/a/10185427/4383587
 
@@ -66,32 +64,36 @@ export default function addResponseMethod(req, res, nxt) {
             if(type({string: view})) {
                 return view
             }
-            return req.app.get("default view template")
+            const filepath = req.app.get("default view template")
+            assert(type({string: filepath}), "Default view template path is not defined!")
+            return filepath
         }
 
         const defaultContext = function() {
-            const lang = type({string: context?.language})
-                ? context.language.toLowerCase()
-                : (req.lang?.selected || "en")
-            let msg = translate(
-                lang,
-                "XXX: request not matching (default status message)"
-            )
+            let lang = context.language?.toLowerCase()?.trim() || req.lang?.selected?.toLowerCase()?.trim()
+            let msg = translate(lang || "en", "XXX: request not matching (default status message)")
+            
             if(type({string: res.statusMessage})) {
                 msg = res.statusMessage
             }
-            if(typeof context !== "undefined") {
+
+            if(!type({nil: context})) {
                 if(type({object: context, string: context?.message})) {
                     msg = context.message
                 } else if(type({string: context})) {
                     msg = context
                 }
             }
+
+            if(!type({string: lang}) || !lang.match(/^[a-z]{2,2}$/i)) {
+                lang = LanguageParser.detect(msg)?.language?.toLowerCase()
+            }
+
             return {
                 status: res.statusCode,
                 title: context?.title || translate(lang, "XXX: request not matching (default message title)"),
                 message: msg,
-                language: lang // TODO write here only the language that was really used
+                language: lang
             }
         }
 
@@ -182,4 +184,10 @@ export default function addResponseMethod(req, res, nxt) {
     }
 
     nxt()
+}
+
+export default function setupResponseRenderer(decorator = "return") {
+    return function(...args) {
+        return addResponseMethod(decorator, ...args)
+    }
 }
