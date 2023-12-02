@@ -17,23 +17,8 @@ const prettify = function(value) {
     )
 }
 
-const addResponseMethod = function(decorator, req, res, nxt) {
-    /*
-        Add a new response decorator `res.return` for rendering responses.
-        The renderer can respond automatically with HTML or JSON, depending on the 'Accept' header negotiation sent by the client.
-
-        Both arguments (view, context) are optional. If supplied however, then 'view' must be a string path to the view template you want to use and 'context' must be an object with at least a string 'message'.
-        Note: 'context.message' takes precidence before 'res.statusMessage' or the default 'msg' from the getter 'defaultContext().message'. 'context.status' is substituted with 'res.statusCode' when it's missing from the context.
-        View templates often accept a 'context.title' too but this property is optional as far as the res.return() handler is concerned.
-
-        Examples:
-            res.status(200).return({message: "Welcome back to my homepage!"})
-            res.return({title: "Hello World!", message: "This is my new project!"})
-            res.status(500)[decorator]("http/msg", {message: "Welcome back to my homepage!"})
-            res.return()
-    */
-
-    assert(type({nil: res.return}), `Response decorator with name '${decorator}' is already reserved!`)
+const addResponseMethod = function(decorator_name, default_template, default_language, req, res, nxt) {
+    assert(type({nil: res[decorator_name]}), `Response decorator with name '${decorator_name}' is already reserved!`)
 
     let hyperlink = req.protocol + "://" + req.headers.host + req.originalUrl // https://stackoverflow.com/a/10185427/4383587
 
@@ -44,9 +29,9 @@ const addResponseMethod = function(decorator, req, res, nxt) {
         body: req.body
     }))
 
-    res.return = function(view, context) {
+    res[decorator_name] = function(view, context) { // add decorator to response object
         try {
-            assert(!res.headersSent, `Server failed to respond to the request '${req.method.toUpperCase()}' from ${req.ip} because RESPONSE HEADERS HAVE ALREADY BEEN SENT! Check your middleware and prevent responding to same request multiple times!`)
+            assert(!res.headersSent, `Server failed to respond to the request '${req.method.toUpperCase()}' from ${req.ip} because response headers have already been sent! Check your router middleware and prevent repetitive responses to the same requests!`)
         } catch(exception) {
             console.trace(exception.message, prettify({
                 headers: res.headers,
@@ -57,47 +42,92 @@ const addResponseMethod = function(decorator, req, res, nxt) {
                     message: res.statusMessage
                 }
             }))
-            return response
+            return res
         }
 
-        const defaultView = function() {
+        const defaultView = () => {
             if(type({string: view})) {
                 return view
             }
-            const filepath = req.app.get("default view template")
-            assert(type({string: filepath}), "Default view template path is not defined!")
-            return filepath
+            assert(
+                type({string: default_template}, {function: default_template}),
+                "Malformed reference to default view template!"
+            )
+            const template = type({function: default_template})
+                ? default_template(req) // run template getter delegate function
+                : default_template
+            assert(
+                type({string: template}),
+                "Invalid reference to default view template!"
+            )
+            return template
         }
 
-        const defaultContext = function() {
-            let lang = context.language?.toLowerCase()?.trim() || req.lang?.selected?.toLowerCase()?.trim()
-            let msg = translate(lang || "en", "XXX: request not matching (default status message)")
+        const defaultContext = () => {
+            let title, message, language
+
+            const validLanguage = value => /^[a-z]{2,2}$/i.test(value)
             
             if(type({string: res.statusMessage})) {
-                msg = res.statusMessage
+                message = res.statusMessage
             }
 
             if(!type({nil: context})) {
                 if(type({object: context, string: context?.message})) {
-                    msg = context.message
+                    message = context.message
                 } else if(type({string: context})) {
-                    msg = context
+                    message = context
                 }
             }
 
-            if(!type({string: lang}) || !lang.match(/^[a-z]{2,2}$/i)) {
-                lang = LanguageParser.detect(msg)?.language?.toLowerCase()
+            if(type({string: context?.title})) {
+                title = context.title
             }
 
+            if(validLanguage(context?.language)) {
+                language = context.language
+            } else {
+                if(type({string: context?.language})) {
+                    console.warn(`Template context language was set to '${context.language}' but this is not valid! A language code should be a string of two lowercase letters.`)
+                }
+                if(type({string: message})) {
+                    language = LanguageParser.detect(message)?.language
+                }
+                if(!validLanguage(language) && type({string: title})) {
+                    language = LanguageParser.detect(title)?.language
+                }
+                if(!validLanguage(language)) {
+                    assert(
+                        type({string: default_language}, {function: default_language}),
+                        "Malformed reference to default language!"
+                    )
+                    language = type({function: default_language})
+                        ? default_language(req) // run language getter delegate function
+                        : default_language
+                    assert(
+                        validLanguage(language),
+                        "Invalid reference to default language!"
+                    )
+                }
+            }
+
+            if(type({nil: message})) {
+                message = translate(language, "XXX: request not matching (default status message)")
+            }
+
+            if(type({nil: title})) {
+                title = translate(language, "XXX: request not matching (default message title)")
+            }
+            
             return {
                 status: res.statusCode,
-                title: context?.title || translate(lang, "XXX: request not matching (default message title)"),
-                message: msg,
-                language: lang
+                title,
+                message,
+                language
             }
         }
 
-        const contextRequirements = function() {
+        const contextRequirements = () => {
             return (
                 !type({nil: context}) &&
                 Object.keys(context).every(property => (
@@ -186,8 +216,11 @@ const addResponseMethod = function(decorator, req, res, nxt) {
     nxt()
 }
 
-export default function setupResponseRenderer(decorator = "return") {
+const getDefaultTemplate = req => req.app.get("default view template")
+const getDefaultLanguage = req => req.app.get("preferred language") || "en"
+
+export default function setupResponseRenderer(default_template = getDefaultTemplate, default_language = getDefaultLanguage, decorator_name = "return") {
     return function(...args) {
-        return addResponseMethod(decorator, ...args)
+        return addResponseMethod(decorator_name, default_template, default_language, ...args)
     }
 }
