@@ -1,7 +1,8 @@
 import {assert, type} from "type-approve"
-import {translate} from "./translator.js"
-import {detect as LanguageParser} from "eld"
 import {stringify as yamlify} from "yaml"
+import {detect as LanguageParser} from "eld"
+import {translate} from "i18n-patch"
+
 
 const prettify = function(value) {
     return util.inspect(
@@ -16,6 +17,7 @@ const prettify = function(value) {
         }
     )
 }
+
 
 const addResponseMethod = function(decorator_name, default_template, default_language, req, res, nxt) {
     assert(type({nil: res[decorator_name]}), `Response decorator with name '${decorator_name}' is already reserved!`)
@@ -215,6 +217,7 @@ const addResponseMethod = function(decorator_name, default_template, default_lan
 
     nxt()
 }
+
 
 const getDefaultTemplate = req => req.app.get("default view template")
 const getDefaultLanguage = req => req.app.get("preferred language") || "en"
