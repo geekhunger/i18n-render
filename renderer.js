@@ -1,12 +1,19 @@
-await import("./message.js")
 import {assert, type} from "type-approve"
 import {stringify as yamlify} from "yaml"
 import prettify from "./prettify.js"
 import {detect as LanguageParser} from "eld"
 import {translate} from "i18n-patch"
 
-export default function addResponseDecorator(decorator_name, default_template, default_language, req, res, nxt) {
-    assert(type({nil: res[decorator_name]}), `Response decorator with name '${decorator_name}' is already reserved!`)
+export default function addResponseDecorator(options, req, res, nxt) {
+    assert(
+        type({string: options?.decorator_name, nil: res[options?.decorator_name]}),
+        `Response decorator with name '${options?.decorator_name}' can't be used!`
+    )
+
+    assert(
+        type({strings: [options?.default_response_title, options?.default_response_message]}),
+        "Response renderer is missing a default value for response title or message!"
+    )
 
     let hyperlink = req.protocol + "://" + req.headers.host + req.originalUrl // https://stackoverflow.com/a/10185427/4383587
 
@@ -17,7 +24,7 @@ export default function addResponseDecorator(decorator_name, default_template, d
         body: req.body
     }))
 
-    res[decorator_name] = function(view, context) { // add decorator to response object
+    res[options.decorator_name] = function(view, context) { // add decorator to response object
         try {
             assert(!res.headersSent, `Server failed to respond to the request '${req.method.toUpperCase()}' from ${req.ip} because response headers have already been sent! Check your router middleware and prevent repetitive responses to the same requests!`)
         } catch(exception) {
@@ -38,12 +45,12 @@ export default function addResponseDecorator(decorator_name, default_template, d
                 return view
             }
             assert(
-                type({string: default_template}, {function: default_template}),
+                type({string: options?.default_template}, {function: options?.default_template}),
                 "Malformed reference to default view template!"
             )
-            const template = type({function: default_template})
-                ? default_template(req) // run template getter delegate function
-                : default_template
+            const template = type({function: options.default_template})
+                ? options.default_template(req) // run template getter delegate function
+                : options.default_template
             assert(
                 type({string: template}),
                 "Invalid reference to default view template!"
@@ -86,12 +93,12 @@ export default function addResponseDecorator(decorator_name, default_template, d
                 }
                 if(!validLanguage(language)) {
                     assert(
-                        type({string: default_language}, {function: default_language}),
+                        type({string: options?.default_language}, {function: options?.default_language}),
                         "Malformed reference to default language!"
                     )
-                    language = type({function: default_language})
-                        ? default_language(req) // run language getter delegate function
-                        : default_language
+                    language = type({function: options.default_language})
+                        ? options.default_language(req) // run language getter delegate function
+                        : options.default_language
                     assert(
                         validLanguage(language),
                         "Invalid reference to default language!"
@@ -99,14 +106,14 @@ export default function addResponseDecorator(decorator_name, default_template, d
                 }
             }
 
-            if(type({nil: message})) {
-                message = translate(language, "XXX: Request Not Matching (Default Status Message)")
+            if(type({nil: title})) {
+                title = translate(language, options.default_response_title)
             }
 
-            if(type({nil: title})) {
-                title = translate(language, "XXX: Request Not Matching (Default Message Title)")
+            if(type({nil: message})) {
+                message = translate(language, options.default_response_message)
             }
-            
+
             return {
                 status: res.statusCode,
                 title,
