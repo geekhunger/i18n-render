@@ -202,7 +202,7 @@ const addResponseMethod = function(decorator_name, default_template, default_lan
                     body: context
                 }))
             },
-            default: () => {
+            default: () => { // TODO: yamlify() should be replaced by something that can convert HTML into plain-text
                 const body = yamlify(context, undefined, {strict: false, indent: 4, lineWidth: -1})
                 console.log(`Rendered a plain-text string:`, prettify(body))
                 res.type("text/plain; charset=utf-8").send(body)
