@@ -1,5 +1,19 @@
 import {assert, type} from "type-approve"
-import {DICTIONARY, strip} from "i18n-patch"
+import {DICTIONARY} from "i18n-patch"
+
+
+export const strip = function(value) { // string trimming that works well with urls
+    assert(
+        type({string: value}),
+        "Can't remove special characters from non-string values!"
+    )
+
+    return value
+        .trim() // remove leading and trailing whitespaces
+        .replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]+/g, "") // remove punctation (including unicode, excluding `\s`), for more information, see https://stackoverflow.com/questions/7576945/javascript-regular-expression-for-punctuation-international/7578937#7578937
+        .replace(/\s+/g, "-") // replace inner whitespaces
+}
+
 
 export default function slug(translation_identifier, with_param_name = true) {
     /*
@@ -9,12 +23,12 @@ export default function slug(translation_identifier, with_param_name = true) {
     */
 
     assert(type({string: translation_identifier}), "Slug is missing identifier argument!")
-    assert(translation_identifier === strip(translation_identifier), `Slug identifier '${translation_identifier}' is not allowed to include special characters!`)
+    assert(translation_identifier === strip(translation_identifier).toLowerCase(), `Slug identifier '${translation_identifier}' is not allowed to include special characters or uppercase letters!`)
     assert(DICTIONARY.hasOwnProperty(translation_identifier), `Dictionary is missing translations for identifier '${translation_identifier}'!`)
     
     return Object // fetch all translations of an identifier and compile them into one single RegExp string, to use as a path segment (slug) in a route handler
         .values(DICTIONARY[translation_identifier])
-        .map(strip)
+        .map(lang => strip(lang).toLowerCase())
         .join("|") // {en: "hello", fr: "bon jour", de: "hallo", ru: "привет"} compiles into "hello|bon-jour|hallo|привет"
         .replace(/(.+)/, with_param_name === true ? `:i18n_${translation_identifier}($1)` : "$1") // add prefix and finish :param by wrapping the preceding RegExp into brackets
         /*
