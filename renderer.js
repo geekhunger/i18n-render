@@ -1,3 +1,4 @@
+await import("./message.js")
 import {assert, type} from "type-approve"
 import {stringify as yamlify} from "yaml"
 import {detect as LanguageParser} from "eld"
@@ -114,11 +115,11 @@ const addResponseMethod = function(decorator_name, default_template, default_lan
             }
 
             if(type({nil: message})) {
-                message = translate(language, "XXX: request not matching (default status message)")
+                message = translate(language, "XXX: Request Not Matching (Default Status Message)")
             }
 
             if(type({nil: title})) {
-                title = translate(language, "XXX: request not matching (default message title)")
+                title = translate(language, "XXX: Request Not Matching (Default Message Title)")
             }
             
             return {
