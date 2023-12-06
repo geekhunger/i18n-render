@@ -3,7 +3,7 @@
 	"name": "i18n-renderer",
 	"version": "1.0.0",
 	"description": "ExpressJS response renderer",
-	"main": "renderer.js",
+	"main": "index.js",
 	"scripts": {},
 	"keywords": [
 		"expressjs",

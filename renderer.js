@@ -1,26 +1,11 @@
 await import("./message.js")
 import {assert, type} from "type-approve"
 import {stringify as yamlify} from "yaml"
+import prettify from "./prettify.js"
 import {detect as LanguageParser} from "eld"
 import {translate} from "i18n-patch"
 
-
-const prettify = function(value) {
-    return util.inspect(
-        type({json: value}) // value
-            ? JSON.parse(value)
-            : value,
-        { // options
-            compact: false, // use linebreak and indentation
-            showHidden: false,
-            depth: null,
-            colors: true
-        }
-    )
-}
-
-
-const addResponseMethod = function(decorator_name, default_template, default_language, req, res, nxt) {
+export default function addResponseDecorator(decorator_name, default_template, default_language, req, res, nxt) {
     assert(type({nil: res[decorator_name]}), `Response decorator with name '${decorator_name}' is already reserved!`)
 
     let hyperlink = req.protocol + "://" + req.headers.host + req.originalUrl // https://stackoverflow.com/a/10185427/4383587
@@ -217,14 +202,4 @@ const addResponseMethod = function(decorator_name, default_template, default_lan
     }
 
     nxt()
-}
-
-
-const getDefaultTemplate = req => req.app.get("default view template")
-const getDefaultLanguage = req => req.app.get("preferred language") || "en"
-
-export default function setupResponseRenderer(default_template = getDefaultTemplate, default_language = getDefaultLanguage, decorator_name = "return") {
-    return function(...args) {
-        return addResponseMethod(decorator_name, default_template, default_language, ...args)
-    }
 }
