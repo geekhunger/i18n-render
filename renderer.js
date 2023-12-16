@@ -94,12 +94,12 @@ export default function addResponseDecorator(options, req, res, nxt) {
                 }
                 if(!validLanguage(language)) {
                     assert(
-                        type({string: options?.default_language}, {function: options?.default_language}),
+                        type({string: options?.preferred_language}, {function: options?.preferred_language}),
                         "Malformed reference to default language!"
                     )
-                    language = type({function: options.default_language})
-                        ? options.default_language(req) // run language getter delegate function
-                        : options.default_language
+                    language = type({function: options.preferred_language})
+                        ? options.preferred_language(req) // run language getter delegate function
+                        : options.preferred_language
                     assert(
                         validLanguage(language),
                         "Invalid reference to default language!"

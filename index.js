@@ -19,12 +19,12 @@ export const renderer = function(options) {
             options.default_template = req => req?.app?.get("default view template") || "error"
     }
 
-    switch(typeof options.default_language) {
+    switch(typeof options.preferred_language) {
         case "function":
         case "string":
             break
         default:
-            options.default_language = req => req?.app?.get("preferred language") || "en"
+            options.preferred_language = req => req?.app?.get("preferred language") || "en"
     }
 
     if(!type({string: options.default_response_title})) {
@@ -49,13 +49,13 @@ export const renderer = function(options) {
         })
     }
 
-    const default_language = type({function: options.default_language})
-        ? options.default_language()
-        : options.default_language
+    const preferred_language = type({function: options.preferred_language})
+        ? options.preferred_language()
+        : options.preferred_language
     assert(
-        has(default_language, options.default_response_title) &&
-        has(default_language, options.default_response_message),
-        `Response renderer is missing a translation ('${default_language}') for the default response title or message!`
+        has(preferred_language, options.default_response_title) &&
+        has(preferred_language, options.default_response_message),
+        `Response renderer is missing a translation ('${preferred_language}') for the default response title or message!`
     )
 
     return function setupRendererMiddleware(...event_arguments) {
