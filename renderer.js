@@ -1,7 +1,7 @@
 import {assert, type} from "type-approve"
 import {stringify as yamlify} from "yaml"
 import plaintext from "./plaintext.js"
-import prettify from "./prettify.js"
+import prettify from "./pretty.js"
 import {detect as LanguageParser} from "eld"
 import {translate} from "i18n-dict"
 
