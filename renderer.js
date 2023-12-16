@@ -50,7 +50,7 @@ export default function addResponseDecorator(options, req, res, nxt) {
                 "Malformed reference to default view template!"
             )
             const template = type({function: options.default_template})
-                ? options.default_template(req) // run template getter delegate function
+                ? options.default_template(req.app) // run template getter delegate function
                 : options.default_template
             assert(
                 type({string: template}),
@@ -98,7 +98,7 @@ export default function addResponseDecorator(options, req, res, nxt) {
                         "Malformed reference to default language!"
                     )
                     language = type({function: options.preferred_language})
-                        ? options.preferred_language(req) // run language getter delegate function
+                        ? options.preferred_language(req.app) // run language getter delegate function
                         : options.preferred_language
                     assert(
                         validLanguage(language),

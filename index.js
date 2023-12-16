@@ -16,7 +16,7 @@ export const renderer = function(options) {
         case "string":
             break
         default:
-            options.default_template = req => req?.app?.get("default view template") || "error"
+            options.default_template = app => app?.get("default view template") || "error"
     }
 
     switch(typeof options.preferred_language) {
@@ -24,7 +24,7 @@ export const renderer = function(options) {
         case "string":
             break
         default:
-            options.preferred_language = req => req?.app?.get("preferred language") || "en"
+            options.preferred_language = app => app?.get("preferred language") || "en"
     }
 
     if(!type({string: options.default_response_title})) {
