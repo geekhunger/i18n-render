@@ -129,7 +129,7 @@ export default function addResponseDecorator(options, req, res, nxt) {
                 !type({nil: context}) &&
                 Object.keys(context).every(property => (
                     !type({nil: context[property]}) &&
-                    ["status", "message", "language"].includes(property)
+                    ["status", "message", "language"].includes(property) // array lists madatory properties for context object
                 ))
             )
         }
