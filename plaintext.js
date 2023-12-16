@@ -9,7 +9,10 @@ const parseHtml = function(value) {
 export default function plaintext(value) {
     const {body} = parseHtml(value)
     if(Array.from(body.childNodes).some(({nodeType}) => nodeType === 1)) {
-        return strim(body.textContent || body.innerText)
+        const text = body.textContent || body.innerText
+        if(typeof text === "string" && text.trim().length > 0) {
+            return strim(text)
+        }
     }
     return value
 }
