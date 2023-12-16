@@ -1,5 +1,5 @@
-import strim from "string-slurp"
 import {JSDOM as Dom} from "jsdom"
+import strim from "string-slurp"
 
 const parseHtml = function(value) {
     const html = new Dom("<!doctype html>")
