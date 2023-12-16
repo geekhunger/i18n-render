@@ -5,7 +5,9 @@
 	"version": "1.3.0",
 	"description": "ExpressJS response renderer",
 	"main": "index.js",
-	"scripts": {},
+	"scripts": {
+		"test": "c8 --reports-dir='./node_modules/.cache/c8' ava 'test.js'"
+	},
 	"keywords": [
 		"expressjs",
 		"render",
@@ -23,5 +25,9 @@
 		"jsdom": "^23.0.1",
 		"string-slurp": "^2.2.0",
 		"type-approve": "^4.0.0"
+	},
+	"devDependencies": {
+		"ava": "^6.0.1",
+		"c8": "^8.0.1"
 	}
 }
