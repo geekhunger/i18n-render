@@ -168,7 +168,7 @@ export default function addResponseDecorator(options, req, res, nxt) {
 
         context.status = context.status || defaultContext().status
         
-        res.format({
+        res.format({ // send response to client (format depends on 'Accept' header)
             html: () => {
                 res.render(view, context, function(error, html) {
                     if(type({string: error})) {
