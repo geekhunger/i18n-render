@@ -1,5 +1,5 @@
 import {assert, type} from "type-approve"
-import {has, add} from "i18n-patch"
+import {has, add} from "./i18n.js"
 import decorator from "./renderer.js"
 
 export const renderer = function(options) {

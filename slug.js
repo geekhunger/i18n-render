@@ -1,5 +1,5 @@
 import {assert, type} from "type-approve"
-import i18n from "i18n-dict"
+import i18n from "./i18n.js"
 
 
 export const strip = function(value) { // string trimming that works well with urls

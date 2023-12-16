@@ -2,8 +2,9 @@ import {assert, type} from "type-approve"
 import {stringify as yamlify} from "yaml"
 import plaintext from "./plaintext.js"
 import prettify from "./pretty.js"
-import {detect as LanguageParser} from "eld"
-import {translate} from "i18n-dict"
+import {translate} from "./i18n.js"
+import {eld} from "eld"
+const {detect} = eld
 
 export default function addResponseDecorator(options, req, res, nxt) {
     assert(
