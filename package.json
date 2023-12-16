@@ -18,7 +18,9 @@
 	"license": "MIT",
 	"dependencies": {
 		"eld": "^1.0.0",
-		"i18n-patch": "github:geekhunger/i18n-patch",
+		"i18n-dict": "^7.0.4",
+		"jsdom": "^23.0.1",
+		"string-slurp": "^2.2.0",
 		"type-approve": "^4.0.0"
 	}
 }

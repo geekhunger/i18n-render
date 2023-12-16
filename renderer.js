@@ -1,8 +1,9 @@
 import {assert, type} from "type-approve"
 import {stringify as yamlify} from "yaml"
+import plaintext from "./plaintext.js"
 import prettify from "./prettify.js"
 import {detect as LanguageParser} from "eld"
-import {translate} from "i18n-patch"
+import {translate} from "i18n-dict"
 
 export default function addResponseDecorator(options, req, res, nxt) {
     assert(
@@ -194,7 +195,8 @@ export default function addResponseDecorator(options, req, res, nxt) {
                     body: context
                 }))
             },
-            default: () => { // TODO: yamlify() should be replaced by something that can convert HTML into plain-text
+            default: () => {
+                context.message = plaintext(context.message)
                 const body = yamlify(context, undefined, {strict: false, indent: 4, lineWidth: -1})
                 console.log(`Rendered a plain-text string:`, prettify(body))
                 res.type("text/plain; charset=utf-8").send(body)
