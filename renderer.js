@@ -4,7 +4,7 @@ import plaintext from "./plaintext.js"
 import prettify from "./pretty.js"
 import {translate} from "./i18n.js"
 import {eld} from "eld"
-const {detect} = eld
+const parseLanguage = eld.detect
 
 export default function addResponseDecorator(options, req, res, nxt) {
     assert(
@@ -88,10 +88,10 @@ export default function addResponseDecorator(options, req, res, nxt) {
                     console.warn(`Template context language was set to '${context.language}' but this is not valid! A language code should be a string of two lowercase letters.`)
                 }
                 if(type({string: message})) {
-                    language = LanguageParser.detect(message)?.language
+                    language = parseLanguage(message).language
                 }
                 if(!validLanguage(language) && type({string: title})) {
-                    language = LanguageParser.detect(title)?.language
+                    language = parseLanguage(title).language
                 }
                 if(!validLanguage(language)) {
                     assert(
